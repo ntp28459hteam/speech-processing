@@ -4,6 +4,7 @@ import pyaudio
 import threading
 import wave
 import os
+import sounddevice
 
 # from keyboard_ import on_press
 # from keyboard_ import listener
@@ -46,10 +47,11 @@ def stop_recording(file_name):
     wf.close()
     frames.clear()
 
-    global stream
-    stream.close()
-    stream = None
+    # global stream
+    # stream.close()
+    # stream = None
     # p.terminate()
+    # p = None
 
     print('Stop recording')
 
