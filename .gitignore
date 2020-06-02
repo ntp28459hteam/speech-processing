@@ -1,2 +1,6 @@
 hw2/data/*
 hw2/demo/*
+*.log
+*.joblib
+.vscode/
+__pycache__/
