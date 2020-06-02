@@ -31,10 +31,10 @@ def pred_gui():
 
 if __name__ == "__main__":
 
-    misc = sd.query_devices()
-    print(misc)
-    sd.default.device = 10
-    print (misc[10])
+    # misc = sd.query_devices()
+    # print(misc)
+    # sd.default.device = 10
+    # print (misc[10])
 
     window = Tk()
 

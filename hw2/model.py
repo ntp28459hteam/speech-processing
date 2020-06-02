@@ -38,10 +38,12 @@ def get_class_data(data_dir):
 def clustering(X, n_clusters=8):
     kmeans = KMeans(n_clusters=n_clusters, n_init=50, random_state=0, verbose=0)
     kmeans.fit(X)
-    # print("centers", kmeans.cluster_centers_.shape)
     return kmeans
 
 def train(evaluate=False):
+    ''' if evaluate is True, test data will be choosen randomly from train data set
+        however, you need to backup your self-record test data before use this evaluate
+    '''
     global trained
     trained = True
 
@@ -50,7 +52,6 @@ def train(evaluate=False):
     class3 = ["trong", "test_trong"]
     class4 = ["thoigian", "test_thoigian"]
     class5 = ["chungta", "test_chungta"]
-    classdemo = ["demo"]
 
     class_names = []
     class_names.extend(class1)
@@ -58,7 +59,6 @@ def train(evaluate=False):
     class_names.extend(class3)
     class_names.extend(class4)
     class_names.extend(class5)
-    class_names.extend(classdemo)
 
     dataset = {}
 
@@ -95,9 +95,7 @@ def train(evaluate=False):
         'demo': {'n_components': 3},
     }
     for cname in class_names:
-        class_vectors = dataset[cname]
         dataset[cname] = list([kmeans.predict(v).reshape(-1,1) for v in dataset[cname]])
-        # [print(np.shape(dataset[cname][i])) for i in range(10) if cname != 'demo']
         n_components = config[cname]['n_components']
         start_prob = np.zeros(n_components)
         start_prob[0] = 1.0
@@ -109,9 +107,13 @@ def train(evaluate=False):
 
         hmm = hmmlearn.hmm.MultinomialHMM(
             n_components=n_components, random_state=0, n_iter=1000, verbose=True,
+            transmat_prior=transmat,
+            startprob_prior=start_prob,
+            init_params='ste',
+            params='ste'
         )
-        hmm.startprob_ = start_prob
-        hmm.transmat_prior = transmat
+        # hmm.startprob_ = start_prob
+        # hmm.transmat_ = transmat
 
         if cname[:4] != 'test':
             X = np.concatenate(dataset[cname])
@@ -165,10 +167,14 @@ def predict(load_from_disk=True):
     class3 = ["trong", "test_trong"]
     class4 = ["thoigian", "test_thoigian"]
     class5 = ["chungta", "test_chungta"]
-    classdemo = ["demo"]
+    # classdemo = ["demo"]
+    # classdemotrim = ["demo_trim"]
+    classdemocut = ["demo_cut"]
 
     class_names = []
-    class_names.extend(classdemo)
+    # class_names.extend(classdemo)
+    # class_names.extend(classdemotrim)
+    class_names.extend(classdemocut)
     class_names.extend(class1)
     class_names.extend(class2)
     class_names.extend(class3)
@@ -179,20 +185,20 @@ def predict(load_from_disk=True):
 
     print("Predicting")
     for true_cname in class_names:
-        if true_cname == 'demo':
+        if true_cname == 'demo_cut':
             dataset[true_cname] = get_class_data(os.path.join("data", true_cname))
+            print(np.shape(dataset[true_cname]))
             all_vectors = np.concatenate([np.concatenate(v, axis=0) for k, v in dataset.items()], axis=0)
             kmeans = clustering(all_vectors)
             dataset[true_cname] = list([kmeans.predict(v).reshape(-1,1) for v in dataset[true_cname]])
-            # print(np.shape(dataset[true_cname][0][:10]))
             for O in dataset[true_cname]:
                 # score = {cname : model.score(O, [len(O)]) for cname, model in models.items() if cname[:4] != 'test' and cname != 'demo' }
                 score = {}
                 for cname in class_names:
-                    if cname[:4] == 'test' or cname == 'demo':
+                    if cname[:4] == 'test' or cname[:4] == 'demo':
                         continue
                     model = models[cname]
-                    if cname[:4] != 'test' and cname != 'demo':
+                    if cname[:4] != 'test' and cname[:4] != 'demo':
                         score[cname] = model.score(O, [len(O)])
                 predict = max(score, key = score.get)
             return predict
